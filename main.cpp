@@ -55,7 +55,6 @@ long long power_mod(long long a, long long d, long long n)
     return result;
 }
 
-// Jeden test Millera-Rabina dla danego a
 bool miller_rabin_test(long long n, long long a, long long d, int s)
 {
     long long x = power_mod(a, d, n);
@@ -80,7 +79,6 @@ bool is_probable_prime(long long n, int k = 5)
     if (n % 2 == 0)
         return false;
 
-    // n - 1 = 2^s * d
     long long d = n - 1;
     int s = 0;
     while (d % 2 == 0)
@@ -100,14 +98,63 @@ bool is_probable_prime(long long n, int k = 5)
     }
     return true;
 }
+
+//  Algorytm Euklidesa
+long long euklides(long long a, long long b, long long &x, long long &y)
+{
+    if (b == 0)
+    {
+        x = 1;
+        y = 0;
+        return a;
+    }
+    long long x1, y1;
+    long long g = euklides(b, a % b, x1, y1);
+    x = y1;
+    y = x1 - y1 * (a % b);
+    return g;
+}
+
+long long mod_inverse(long long a, long long m)
+{
+    long long x, y;
+    long long g = euklides(a, m, x, y);
+    if (g != 1)
+        return -1;
+    return (x % m + m) % m;
+}
+
 int main()
 {
     vector<int> primes = all_primes16();
-    int n = random_prime(primes);
-    cout << "Wylosowana liczba: " << n << endl;
-    if (is_probable_prime(n))
-        cout << n << " jest prawdopodobnie liczbą pierwszą.\n";
-    else
-        cout << n << " jest liczbą złożoną.\n";
+
+    long long p = random_prime(primes);
+    long long q = random_prime(primes);
+    while (q == p)
+        q = random_prime(primes);
+
+    cout << "Wylosowane liczby pierwsze:\n";
+    cout << "p = " << p << "\n";
+    cout << "q = " << q << "\n";
+
+    long long n = p * q;
+    long long phi = (p - 1) * (q - 1);
+    long long e = 65537;
+
+    // Sprawdzenie, czy e i φ(n) są względnie pierwsze
+    long long x, y;
+    if (euklides(e, phi, x, y) != 1)
+    {
+        cout << "e nie jest względnie pierwsze z phi(n)! Wybieram inne e.\n";
+        for (e = 3; e < phi; e++)
+            if (euklides(e, phi, x, y) == 1)
+                break;
+    }
+
+    long long d = mod_inverse(e, phi);
+
+    cout << "\nKlucz publiczny:  (e = " << e << ", n = " << n << ")\n";
+    cout << "Klucz prywatny:   (d = " << d << ", n = " << n << ")\n";
+
     return 0;
 }
